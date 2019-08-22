@@ -20,6 +20,7 @@
 
 using std::string;
 using std::vector;
+using std::normal_distribution;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
   /**
@@ -30,8 +31,24 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
    * NOTE: Consult particle_filter.h for more information about this method 
    *   (and others in this file).
    */
-  num_particles = 0;  // TODO: Set the number of particles
+  num_particles = 1000;  // TODO: Set the number of particles
+  for (int i = 0; i < num_particles; i++) {
+    std::default_random_engine gen;
+    Particle temp_particle;
+    temp_particle.id = i;
 
+    normal_distribution<double> dist_x(x, std[0]);
+    temp_particle.x = dist_x(gen);
+
+    normal_distribution<double> dist_y(y, std[1]);
+    temp_particle.y = dist_y(gen);
+
+    normal_distribution<double> dist_theta(theta, std[2]);
+    temp_particle.theta = dist_theta(gen);
+
+    temp_particle.weight = 1;
+    particles.push_back(temp_particle);
+  }
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], 
@@ -43,7 +60,26 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
    *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
    *  http://www.cplusplus.com/reference/random/default_random_engine/
    */
+  for (int i = 0; i < num_particles; i++) {
+    std::default_random_engine gen;
 
+    x_o = particles[i].x;
+    y_o = particles[i].y;
+    theta_o = particles[i].theta;
+
+    theta_f = theta_0 + yaw_rate*delta_t;
+    x_f = x_o + (velocity/yaw_rate) * (sin(theta_f) - sin(theta_o));
+    y_f = y_o + (velocity/yaw_rate) * (cos(theta_o) - cos(theta_f));
+
+    normal_distribution<double> dist_x(x_f, std_pos[0]);
+    particles.x = dist_x(gen);
+
+    normal_distribution<double> dist_y(y_f, std_pos[1]);
+    particles.y = dist_y(gen);
+
+    normal_distribution<double> dist_theta(theta_f, std_pos[2]);
+    particles.theta = dist_theta(gen);
+  }
 }
 
 void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted, 
