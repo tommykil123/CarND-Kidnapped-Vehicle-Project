@@ -63,22 +63,22 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
   for (int i = 0; i < num_particles; i++) {
     std::default_random_engine gen;
 
-    x_o = particles[i].x;
-    y_o = particles[i].y;
-    theta_o = particles[i].theta;
+    double x_0 = particles[i].x;
+    double y_0 = particles[i].y;
+    double theta_0 = particles[i].theta;
 
-    theta_f = theta_0 + yaw_rate*delta_t;
-    x_f = x_o + (velocity/yaw_rate) * (sin(theta_f) - sin(theta_o));
-    y_f = y_o + (velocity/yaw_rate) * (cos(theta_o) - cos(theta_f));
+    double theta_f = theta_0 + yaw_rate*delta_t;
+    double x_f = x_0 + (velocity/yaw_rate) * (sin(theta_f) - sin(theta_0));
+    double y_f = y_0 + (velocity/yaw_rate) * (cos(theta_0) - cos(theta_f));
 
     normal_distribution<double> dist_x(x_f, std_pos[0]);
-    particles.x = dist_x(gen);
+    particles[i].x = dist_x(gen);
 
     normal_distribution<double> dist_y(y_f, std_pos[1]);
-    particles.y = dist_y(gen);
+    particles[i].y = dist_y(gen);
 
     normal_distribution<double> dist_theta(theta_f, std_pos[2]);
-    particles.theta = dist_theta(gen);
+    particles[i].theta = dist_theta(gen);
   }
 }
 
@@ -92,7 +92,19 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
    *   probably find it useful to implement this method and use it as a helper 
    *   during the updateWeights phase.
    */
-
+  for (int i = 0; i < observations.size(); i++) {
+    double nearest_distance = 999999999;
+    int idx_nearest = 0;
+    for (int j = 0; j < predicted.size(); j++) {
+      double distance = dist(predicted[j].x, predicted[j].y, observations[i].x, observations[i].y);
+      if (distance < nearest_distance) {
+        nearest_distance = distance;
+        idx_nearest = j;
+      }
+    }
+    observations[i].x = predicted[idx_nearest].x;
+    observations[i].y = predicted[idx_nearest].y;
+  }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
