@@ -63,6 +63,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
    */
   std::default_random_engine gen;
   for (int i = 0; i < particles.size(); i++) {
+    if (fabs(yaw_rate) < 1e-5) yaw_rate = 1e-5;
     double x_0 = particles[i].x;
     double y_0 = particles[i].y;
     double theta_0 = particles[i].theta;
